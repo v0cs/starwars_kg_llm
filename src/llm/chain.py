@@ -75,60 +75,49 @@ class StarWarsQAChain:
         raise RuntimeError("Não foi possível configurar a cadeia de QA")
     
     def _create_manual_chain(self):
-        """Cria uma implementação manual básica da cadeia"""
+        """Implementação manual robusta para geração de Cypher"""
         from langchain.prompts import PromptTemplate
-        from langchain.chains import LLMChain
         
-        cypher_template = """
-        Você é um especialista em Cypher para Neo4j. Baseado na pergunta do usuário, 
-        gere uma consulta Cypher para um banco de dados sobre Star Wars.
+        # Template melhorado para Cypher
+        cypher_template = """Você é um especialista em Neo4j Cypher. 
+        Gere SOMENTE a consulta Cypher para: {question}
+        Use apenas os seguintes padrões de relacionamento: -[:APARECE_EM]->
+        Retorne APENAS a consulta Cypher, sem explicações ou texto adicional.
         
-        Esquema do banco:
-        {schema}
+        Exemplo para "Quem são os personagens de Star Wars?":
+        MATCH (p:Personagem) RETURN p.nome LIMIT 10
         
-        Pergunta: {question}
-        
-        Consulta Cypher:
-        """
+        Consulta Cypher:"""
         
         self.cypher_prompt = PromptTemplate(
             template=cypher_template,
-            input_variables=["schema", "question"]
+            input_variables=["question"]
         )
         
-        answer_template = """
-        Baseado na consulta Cypher executada e nos resultados obtidos, 
-        responda à pergunta do usuário de forma clara e concisa.
-        
+        # Template para resposta final
+        answer_template = """Responda à pergunta baseada nos resultados:
         Pergunta: {question}
-        Consulta Cypher: {cypher_query}
-        Resultados: {results}
-        
-        Resposta:
-        """
+        Dados: {results}
+        Resposta:"""
         
         self.answer_prompt = PromptTemplate(
             template=answer_template,
-            input_variables=["question", "cypher_query", "results"]
+            input_variables=["question", "results"]
         )
-        
-        self.cypher_chain = LLMChain(llm=self.llm, prompt=self.cypher_prompt)
-        self.answer_chain = LLMChain(llm=self.llm, prompt=self.answer_prompt)
     
     def test_connections(self):
-        """Método para testar as conexões antes de usar"""
         try:
-            # Teste Neo4j
-            result = self.graph.query("MATCH (n) RETURN count(n) as total_nodes LIMIT 1")
-            print(f"✅ Neo4j conectado - Total de nós: {result[0]['total_nodes']}")
+            result = self.graph.query(
+                "MATCH (n) RETURN count(n) AS node_count LIMIT 1"
+            )
+            print(f"✅ Neo4j conectado - Nós: {result[0]['node_count']}")
             
-            # Teste Ollama
-            test_response = self.llm.invoke("Teste de conexão")
+            test_response = self.llm.invoke("Teste")
             print(f"✅ Ollama conectado - Resposta: {test_response[:50]}...")
             
             return True
         except Exception as e:
-            print(f"❌ Erro na conexão: {str(e)}")
+            print(f"❌ Erro de conexão: {str(e)}")
             return False
 
     def query(self, question):
@@ -154,33 +143,34 @@ class StarWarsQAChain:
         }
     
     def _query_manual(self, question):
-        """Executa consulta usando implementação manual"""
-        schema = self.graph.get_schema
-        
-        cypher_response = self.cypher_chain.invoke({
-            "schema": schema,
-            "question": question
-        })
-        
-        cypher_query = cypher_response["text"].strip()
-        
+        """Executa consulta usando implementação manual melhorada"""
         try:
+            # Gera consulta Cypher
+            cypher_query = self.llm.invoke(
+                self.cypher_prompt.format(question=question)
+            ).strip()
+            
+            print(f"Generated Cypher: {cypher_query}")  # Debug
+            
+            # Executa no Neo4j
             results = self.graph.query(cypher_query)
             
-            answer_response = self.answer_chain.invoke({
-                "question": question,
-                "cypher_query": cypher_query,
-                "results": str(results)
-            })
+            # Gera resposta final
+            answer = self.llm.invoke(
+                self.answer_prompt.format(
+                    question=question,
+                    results=str(results)
+                )
+            )
             
             return {
-                "answer": answer_response["text"].strip(),
+                "answer": answer,
                 "cypher_query": cypher_query,
                 "context": results
             }
             
         except Exception as e:
-            return {"error": f"Erro ao executar consulta Cypher: {str(e)}"}
+            return {"error": f"Erro: {str(e)}"}
 
     def get_schema(self):
         """Método para visualizar o esquema do banco"""
