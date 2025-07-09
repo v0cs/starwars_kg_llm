@@ -19,6 +19,11 @@ Este projeto tem como objetivo construir um **grafo de conhecimento (Knowledge G
 - **Langchain** — framework para integração de LLMs com estruturas externas
 - **Python 3.10+** — linguagem de orquestração dos scripts
 
+## Documentos
+
+ - [Apresentação PDF](https://github.com/user-attachments/files/21135284/Introducao.pdf)
+ - [Consulta Neo4j](https://github.com/user-attachments/assets/35511530-4b7c-4b14-8e84-98401a054fc8)
+
 ## Equipe
 - Leandro Pellegrini 
 - Vítor Celestino
