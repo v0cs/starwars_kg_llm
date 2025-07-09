@@ -24,6 +24,15 @@ Este projeto tem como objetivo construir um **grafo de conhecimento (Knowledge G
  - [Apresentação PDF](https://github.com/user-attachments/files/21135284/Introducao.pdf)
  - [Consulta Neo4j](https://github.com/user-attachments/assets/35511530-4b7c-4b14-8e84-98401a054fc8)
 
+
+## Resultados
+
+![rodando](https://github.com/user-attachments/assets/b6c7e5ab-a982-49ac-a19a-2c126b580ac0)
+
+![rodando2](https://github.com/user-attachments/assets/44b1518a-f390-484d-8625-3fc7336e9d2c)
+
+![rodando3](https://github.com/user-attachments/assets/d7582b39-bc01-4b96-9447-ccd7fc1ff0e0)
+
 ## Equipe
 - Leandro Pellegrini 
 - Vítor Celestino
